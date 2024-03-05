@@ -90,26 +90,28 @@ def main():
                 st.session_state.choice = 'Home'
 
         st.header("Skill Relevance Overview")
-        if st.button("Process"):
-            # Check if both resume and job description are uploaded
-            if st.session_state.processed_resume and st.session_state.processed_job_description:
+        if st.session_state.processed_resume and st.session_state.processed_job_description:
+            resume_processor=ResumeProcessor()
+            if st.button("Process Resume", key="process_resume_button"):
                 resume = st.session_state.raw_text
                 jd = st.session_state.raw_text1
-                resume_processor=ResumeProcessor()
-                #resume_processor.load_skill_patterns("D:\Designing\Final_ATS\jz_skill_patterns.jsonl")
+                # resume_processor.load_skill_patterns("D:\\Designing\\experimento\\jz_skill_patterns.jsonl")
                 resume_processor.load_skill_patterns("jz_skill_patterns.jsonl")
                 remails = resume_processor.extract_emails(resume)
                 rlinks = resume_processor.extract_links(resume)
                 cleaned_resume = resume_processor.remove_links_and_emails(resume, rlinks, remails)
                 cleaned_resume = resume_processor.preprocess_resume(cleaned_resume)
+                st.session_state.cleaned_resume=cleaned_resume
                 jemails = resume_processor.extract_emails(jd)
+                st.session_state.jemails=jemails
                 jlinks = resume_processor.extract_links(jd)
+                st.session_state.jlinks=jlinks
                 cleaned_jd = resume_processor.remove_links_and_emails(jd, jlinks, jemails)
                 cleaned_jd = resume_processor.preprocess_resume(cleaned_jd)
                 st.subheader('Common Words between Resume and Job Description')
                 common = Base_ATS.find_common_words_dict(cleaned_resume,cleaned_jd)  
                 st.write(common)
-                #skill_pattern="D:\\Designing\\Final_ATS\\jz_skill_patterns.jsonl"
+                # skill_pattern="D:\\Designing\\experimento\\jz_skill_patterns.jsonl"
                 skill_pattern="jz_skill_patterns.jsonl"
                 ner=spacy.load('en_core_web_lg')
                 entity_ruler=ner.add_pipe("entity_ruler")
@@ -127,54 +129,49 @@ def main():
                 html = displacy.render(doc, style="ent", options=options, page=False)
                 st.subheader('Resume Analysis')
                 st.markdown(html, unsafe_allow_html=True)
-                labelled_entities=resume_processor.extracting_entities(doc)
+                # labelled_entities=resume_processor.extracting_entities(doc)
                 #st.markdown(json.dumps(labelled_entities,indent=2))
                 #st.json(labelled_entities)
-                resume_name = docx_file.name
-                jd_name = docx_file1.name
-                resume_name = resume_name.split('.')[0].strip()
-                resume_name = resume_name + ".json"
-                #st.write(resume_name)
-                Base_ATS.save_json_file(labelled_entities, json_path, resume_name)
-                st.write('')
+                # resume_name = docx_file.name
+                # jd_name = docx_file1.name
+                # resume_name = resume_name.split('.')[0].strip()
+                # resume_name = resume_name + ".json"
+                # #st.write(resume_name)
+                # Base_ATS.save_json_file(labelled_entities, json_path, resume_name)
+                # st.write('')
+            if st.button("Process JD", key="process_jd_button"):
+                jd = st.session_state.raw_text1
+                job_emails = st.session_state.jemails
+                job_links = st.session_state.jlinks
+                cleaned_jd = resume_processor.remove_links_and_emails(jd, job_links, job_emails)
+                cleaned_jd = resume_processor.preprocess_resume(cleaned_jd)
+                st.session_state.cleaned_jd = cleaned_jd  # Store cleaned JD in session state
                 st.subheader('Skills in Job Description')
-                jd_skills = Match_ATS.jd_skill(cleaned_jd)
+                jd_skills = Job_Des.jd_skill(cleaned_jd)
                 st.write(jd_skills)
-
                 st.write('')
+
+            if st.button("Match Results"):
                 resume_name = docx_file.name
                 jd_name = docx_file1.name
-                score, missing_skill = Match_ATS.cal_cosine_similarity(cleaned_resume, cleaned_jd)
-
+                resume_cleaned = st.session_state.cleaned_resume
+                jd_cleaned = st.session_state.cleaned_jd  
+                st.write("Done")
+                score, missing_skills = Scoring.cal_cosine_similarity(resume_cleaned, jd_cleaned)
                 st.subheader('Match Results for Resume and Job Description')
-                st.session_state.choice = 'Home'
-                if score >= 50:  # Adjust threshold as needed
+                if score >= 50:  
                     st.write(f"<h5><b><span style='color: #fd971f;'>{os.path.basename(resume_name)} is Recommended for {os.path.basename(jd_name)}</span></b></h5>", unsafe_allow_html=True)
                     st.write(f"<h5><b><span style='color: #fd971f;'>Score: {score}</span></b></h5>", unsafe_allow_html=True)
                 else:
                     st.write(f"<h5><b><span style='color: #fd971f;'>{os.path.basename(resume_name)} is Not Recommended for {os.path.basename(jd_name)}</span></b></h5>", unsafe_allow_html=True)
                     st.write(f"<h5><b><span style='color: #fd971f;'>Score: {score}</span></b></h5>", unsafe_allow_html=True)
-                if missing_skill:
-                    st.subheader('Missing Skills')
-                    st.write(missing_skill)
-                    
-                    st.session_state.missing_skills = missing_skill
-                    st.session_state.show_go_to_feedback_button = True
-                    
-                    if "show_go_to_feedback_button" in st.session_state and st.session_state.show_go_to_feedback_button:
-                        if st.button("About"):
-                            st.write("GG")
-                            st.session_state.choice = 'About'
-                            st.session_state.clicked_feedback_button = True
-                            st.experimental_rerun()
-                                                
-                    # st.write("GG")
-                    # st.session_state.choice = 'About'
-                    # st.session_state.clicked_feedback_button = True
-                    # st.experimental_rerun()
-            else:
-                st.warning("Please upload both Resume and Job Description before using ATS")
-        
+                    if missing_skills:
+                        st.subheader('Missing Skills')
+                        st.write(missing_skills)
+
+        else:
+            st.warning("Please upload both Resume and Job Description before using ATS")
+    
     elif choice =='About':
         st.title("About")
         st.text('An NLP Project by ')
