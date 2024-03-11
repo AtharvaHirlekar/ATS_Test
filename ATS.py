@@ -20,44 +20,10 @@ resume_processor = ResumeProcessor()
 
 from PIL import Image
 
-# Display circular image with reduced size
-image_path = "circle_logo.png"
-st.set_page_config(page_icon=image_path, page_title="Applicant Tracking System")
-
 def display_team_member(name, github_url, linkedin_url):
     st.markdown(f'<div style="display: flex; justify-content: space-between; align-items: center;"><p style="font-weight: bold; font-size: larger; margin-bottom: 0;">{name}</p><div><a href="{github_url}" style="margin-left: 10px;"><img src="https://cdn.jsdelivr.net/npm/simple-icons/icons/github.svg" alt="GitHub" width="20"></a><a href="{github_url}" style="margin-left: 5px;">GitHub</a><a href="{linkedin_url}" style="margin-left: 10px;"><img src="https://cdn.jsdelivr.net/npm/simple-icons/icons/linkedin.svg" alt="LinkedIn" width="20"></a><a href="{linkedin_url}" style="margin-left: 5px;">LinkedIn</a></div></div>', unsafe_allow_html=True)
 
 def main():
-
-    @st.cache_data
-    def get_img_as_base64(file_path):
-        with open(file_path, "rb") as f:
-            data = f.read()
-        return base64.b64encode(data).decode()
-
-    img = get_img_as_base64("Background.jpg")
-
-    page_bg_img = f"""
-    <style>
-        .stApp {{
-            background-image: url("data:image/jpeg;base64,{img}");
-            background-size: cover;
-            height: 100vh; /* Adjust the height as needed */
-        }}
-
-        .stHeader {{
-            background-image: url("data:image/jpeg;base64,{img}");
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white; /* Text color for the header */
-        }}
-
-        .stToolbar {{
-            background-image: url("data:image/jpeg;base64,{img}");
-            right: 2rem;
-        }}
-    </style>
-    """
-    st.markdown(page_bg_img, unsafe_allow_html=True)
 
     # Get the absolute path of the currently executing Python script in Streamlit
     script_path = os.path.realpath(__file__)
@@ -65,13 +31,11 @@ def main():
     folder_path = os.path.dirname(script_path)
     json_path = folder_path+"/JSON"
 
-    st.sidebar.image(image_path,width=250)
     with st.sidebar:
         choice = option_menu("Main Menu", ["Home", "ATS Matcher", "FeedBack Page","About Us" ], 
             icons=['house', 'cloud-upload', 'gear', 'people'], menu_icon="list", default_index=0)
 
     if choice=="Home":
-        
         st.title("Application Tracking System")
         intro = "Welcome to our Applicant Tracking System (ATS), a tool that makes hiring easier. If your an employer our system simplifies the recruitment process which is usually manual in nature. "
         intro1 = "We use advanced natural language processing (NLP) to analyze resumes and job descriptions, offering valuable insights for better hiring decisions. Explore the features to streamline your recruitment journey."
@@ -89,13 +53,6 @@ def main():
         st.markdown(intro4, unsafe_allow_html=True)
         st.markdown(intro5, unsafe_allow_html=True)
         st.markdown(intro6, unsafe_allow_html=True)
-
-        ##Video path
-        
-        st.caption("The right match for your resource needs. Watch the below video!!!") 
-        video_path = "HomePage_Video.mp4"
-        st.video(video_path)
-        
 
     if choice=="ATS Matcher":
         st.title('Resume And Job Description')
@@ -264,9 +221,6 @@ def main():
 
     if choice=="About Us":
         st.title("Meet Our Team")
-        video_path1 = "Credits.mp4"
-        st.video(video_path1)
-        
         st.subheader("Team Members")
         display_team_member("AbdulKadar Kapasi", "https://github.com/Abdulkadarkapasi/Abdulkadarkapasi","https://www.linkedin.com/in/abdulkadar-kapasi/")
     
