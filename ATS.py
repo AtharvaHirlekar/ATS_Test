@@ -4,8 +4,7 @@ import docx2txt
 import os
 import spacy
 from spacy import displacy
-import base64
-from PIL import Image
+#from PIL import Image
 import nltk
 
 from Base import BaseATS
@@ -18,13 +17,10 @@ Job_Des = Job_Description()
 Scoring = Matching()
 resume_processor = ResumeProcessor()
 
-from PIL import Image
-
 def display_team_member(name, github_url, linkedin_url):
     st.markdown(f'<div style="display: flex; justify-content: space-between; align-items: center;"><p style="font-weight: bold; font-size: larger; margin-bottom: 0;">{name}</p><div><a href="{github_url}" style="margin-left: 10px;"><img src="https://cdn.jsdelivr.net/npm/simple-icons/icons/github.svg" alt="GitHub" width="20"></a><a href="{github_url}" style="margin-left: 5px;">GitHub</a><a href="{linkedin_url}" style="margin-left: 10px;"><img src="https://cdn.jsdelivr.net/npm/simple-icons/icons/linkedin.svg" alt="LinkedIn" width="20"></a><a href="{linkedin_url}" style="margin-left: 5px;">LinkedIn</a></div></div>', unsafe_allow_html=True)
 
 def main():
-
     # Get the absolute path of the currently executing Python script in Streamlit
     script_path = os.path.realpath(__file__)
     # Get the folder path from the script path
@@ -32,8 +28,8 @@ def main():
     json_path = folder_path+"/JSON"
 
     with st.sidebar:
-        choice = option_menu("Main Menu", ["Home", "ATS Matcher", "FeedBack Page","About Us" ], 
-            icons=['house', 'cloud-upload', 'gear', 'people'], menu_icon="list", default_index=0)
+        choice = option_menu("Main Menu", ["Home", "ATS Matcher", "FeedBack Page"], 
+            icons=['house', 'cloud-upload', 'gear'], menu_icon="list", default_index=0)
 
     if choice=="Home":
         st.title("Application Tracking System")
@@ -70,42 +66,14 @@ def main():
         # Upload Resume
         docx_file = st.file_uploader('Upload Resume', type=['pdf', 'docx', 'txt'])
         if st.button("Process Resume"):
-            if docx_file is not None:
-                file_details = {'filename': docx_file.name, 'filetype': docx_file.type, 'filesize': docx_file.size}
-                st.write(file_details)
-                if docx_file.type == 'text/plain':
-                    st.session_state.raw_text = str(docx_file.read(), 'utf-8')
-                    st.text(st.session_state.raw_text)
-                elif docx_file.type == 'application/pdf':
-                    save_path = Base_ATS.save_uploaded_file(docx_file, destination_path=folder_path)
-                    st.session_state.raw_text = Base_ATS.read_pdf(docx_file)
-                    st.text(st.session_state.raw_text)
-                    st.session_state.resume_path = save_path
-                    Base_ATS.delete_file(save_path)
-                else:
-                    st.session_state.raw_text = docx2txt.process(docx_file)
-                    st.text(st.session_state.raw_text)
-
-                st.session_state.processed_resume = True
+            process_uploaded_file_and_display(docx_file, 'raw_text', folder_path)
+            st.session_state.processed_resume = True
 
         # Upload Job Description
         docx_file1 = st.file_uploader('Upload Job Description', type=['pdf', 'docx', 'txt'])
         if st.button("Process Job Description"):
-            if docx_file1 is not None:
-                file_details = {'filename': docx_file1.name, 'filetype': docx_file1.type, 'filesize': docx_file1.size}
-                st.write(file_details)
-                if docx_file1.type == 'text/plain':
-                    st.session_state.raw_text1 = str(docx_file1.read(), 'utf-8')
-                    st.text(st.session_state.raw_text1)
-                elif docx_file1.type == 'application/pdf':
-                    save_path = Base_ATS.save_uploaded_file(docx_file1, destination_path=folder_path)
-                    st.session_state.raw_text1 = Base_ATS.read_pdf(docx_file1)
-                    st.text(st.session_state.raw_text1)
-                    Base_ATS.delete_file(save_path)
-                else:
-                    st.session_state.raw_text1 = docx2txt.process(docx_file1)
-                    st.text(st.session_state.raw_text1)
-                st.session_state.processed_job_description = True
+            process_uploaded_file_and_display(docx_file1, 'raw_text1', folder_path)
+            st.session_state.processed_job_description = True
 
         st.header("Skill Relevance Overview")
         if st.button("Analyze Resume"):
@@ -219,34 +187,34 @@ def main():
                     st.error(f"An error occurred: {e}")
 
 
-    if choice=="About Us":
-        st.title("Meet Our Team")
-        st.subheader("Team Members")
-        display_team_member("AbdulKadar Kapasi", "https://github.com/Abdulkadarkapasi/Abdulkadarkapasi","https://www.linkedin.com/in/abdulkadar-kapasi/")
+    # if choice=="About Us":
+    #     st.title("Meet Our Team")
+        # st.subheader("Team Members")
+        # display_team_member("AbdulKadar Kapasi", "https://github.com/Abdulkadarkapasi/Abdulkadarkapasi","https://www.linkedin.com/in/abdulkadar-kapasi/")
     
-        display_team_member("Aditya Verma", "https://github.com/adityaverma11","https://www.linkedin.com/in/aditya-verma-735784220/")
+        # display_team_member("Aditya Verma", "https://github.com/adityaverma11","https://www.linkedin.com/in/aditya-verma-735784220/")
     
-        display_team_member("Atharva Hirlekar", "https://github.com/AtharvaHirlekar/", "https://www.linkedin.com/in/atharvahirlekar/")
+        # display_team_member("Atharva Hirlekar", "https://github.com/AtharvaHirlekar/", "https://www.linkedin.com/in/atharvahirlekar/")
 
-        display_team_member("Arif Khan", "https://github.com/Arif-khan27/Arif-khan27","https://www.linkedin.com/in/arifkhan5467/")
+        # display_team_member("Arif Khan", "https://github.com/Arif-khan27/Arif-khan27","https://www.linkedin.com/in/arifkhan5467/")
     
-        display_team_member("Arin Purohit", "https://github.com/arinp10","https://www.linkedin.com/in/arin-purohit/?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=ios_app")
+        # display_team_member("Arin Purohit", "https://github.com/arinp10","https://www.linkedin.com/in/arin-purohit/?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=ios_app")
     
-        display_team_member("Arsh Vohra", "https://github.com/arshvohra29","https://www.linkedin.com/in/arsh-vohra-76b214221/")
+        # display_team_member("Arsh Vohra", "https://github.com/arshvohra29","https://www.linkedin.com/in/arsh-vohra-76b214221/")
     
-        display_team_member("Cwen Fernandes", "https://github.com/Rayonushi","https://www.linkedin.com/in/cwenfernandes/")
+        # display_team_member("Cwen Fernandes", "https://github.com/Rayonushi","https://www.linkedin.com/in/cwenfernandes/")
     
-        display_team_member("Saloni Shinde", "https://github.com/saloniish","https://www.linkedin.com/in/salonishinde20/")
+        # display_team_member("Saloni Shinde", "https://github.com/saloniish","https://www.linkedin.com/in/salonishinde20/")
     
-        display_team_member("Piyush Mishra", "https://github.com/Meeshra","https://www.linkedin.com/in/piyush-mishra-01593b21a/")
+        # display_team_member("Piyush Mishra", "https://github.com/Meeshra","https://www.linkedin.com/in/piyush-mishra-01593b21a/")
     
-        display_team_member("Reeya Wadekar", "https://github.com/reeyaaa","https://www.linkedin.com/in/reeyawadekar/")
+        # display_team_member("Reeya Wadekar", "https://github.com/reeyaaa","https://www.linkedin.com/in/reeyawadekar/")
     
-        display_team_member("Reyhan Pereira", "https://github.com/reyhanpereira2608","https://www.linkedin.com/in/reyhanpereira2608/")
+        # display_team_member("Reyhan Pereira", "https://github.com/reyhanpereira2608","https://www.linkedin.com/in/reyhanpereira2608/")
 
-        display_team_member("Riya Shukla", "https://github.com/riyashukla24","https://www.linkedin.com/in/riya-shukla-880b20235/")
+        # display_team_member("Riya Shukla", "https://github.com/riyashukla24","https://www.linkedin.com/in/riya-shukla-880b20235/")
     
-        display_team_member("Shravani Mahadeshwar", "https://github.com/Shravani018","https://www.linkedin.com/in/shravani-mahadeshwar/")
+        # display_team_member("Shravani Mahadeshwar", "https://github.com/Shravani018","https://www.linkedin.com/in/shravani-mahadeshwar/")
 
     
 if __name__ == "__main__":
