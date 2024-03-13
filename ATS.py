@@ -63,17 +63,44 @@ def main():
         if 'jd_process' not in st.session_state:
             st.session_state.jd_process = False    
 
-        # Upload Resume
         docx_file = st.file_uploader('Upload Resume', type=['pdf', 'docx', 'txt'])
         if st.button("Process Resume"):
-            process_uploaded_file_and_display(docx_file, 'raw_text', folder_path)
-            st.session_state.processed_resume = True
+            if docx_file is not None:
+                file_details = {'filename': docx_file.name, 'filetype': docx_file.type, 'filesize': docx_file.size}
+                st.write(file_details)
+                if docx_file.type == 'text/plain':
+                    st.session_state.raw_text = str(docx_file.read(), 'utf-8')
+                    st.text(st.session_state.raw_text)
+                elif docx_file.type == 'application/pdf':
+                    save_path = Base_ATS.save_uploaded_file(docx_file, destination_path=folder_path)
+                    st.session_state.raw_text = Base_ATS.read_pdf(docx_file)
+                    st.text(st.session_state.raw_text)
+                    st.session_state.resume_path = save_path
+                    Base_ATS.delete_file(save_path)
+                else:
+                    st.session_state.raw_text = docx2txt.process(docx_file)
+                    st.text(st.session_state.raw_text)
+
+                st.session_state.processed_resume = True
 
         # Upload Job Description
         docx_file1 = st.file_uploader('Upload Job Description', type=['pdf', 'docx', 'txt'])
         if st.button("Process Job Description"):
-            process_uploaded_file_and_display(docx_file1, 'raw_text1', folder_path)
-            st.session_state.processed_job_description = True
+            if docx_file1 is not None:
+                file_details = {'filename': docx_file1.name, 'filetype': docx_file1.type, 'filesize': docx_file1.size}
+                st.write(file_details)
+                if docx_file1.type == 'text/plain':
+                    st.session_state.raw_text1 = str(docx_file1.read(), 'utf-8')
+                    st.text(st.session_state.raw_text1)
+                elif docx_file1.type == 'application/pdf':
+                    save_path = Base_ATS.save_uploaded_file(docx_file1, destination_path=folder_path)
+                    st.session_state.raw_text1 = Base_ATS.read_pdf(docx_file1)
+                    st.text(st.session_state.raw_text1)
+                    Base_ATS.delete_file(save_path)
+                else:
+                    st.session_state.raw_text1 = docx2txt.process(docx_file1)
+                    st.text(st.session_state.raw_text1)
+                st.session_state.processed_job_description = True
 
         st.header("Skill Relevance Overview")
         if st.button("Analyze Resume"):
@@ -87,15 +114,6 @@ def main():
                 cleaned_resume = resume_processor.remove_links_and_emails(resume, rlinks, remails)
                 cleaned_resume = resume_processor.preprocess_resume(cleaned_resume)
                 st.session_state.cleaned_resume=cleaned_resume
-                jemails = resume_processor.extract_emails(jd)
-                st.session_state.jemails=jemails
-                jlinks = resume_processor.extract_links(jd)
-                st.session_state.jlinks=jlinks
-                cleaned_jd = resume_processor.remove_links_and_emails(jd, jlinks, jemails)
-                cleaned_jd = resume_processor.preprocess_resume(cleaned_jd)
-                st.subheader('Common Words between Resume and Job Description')
-                common = Base_ATS.find_common_words_dict(cleaned_resume,cleaned_jd)  
-                st.write(common)
                 skill_pattern="jz_skill_patterns.jsonl"
                 ner=spacy.load('en_core_web_lg')
                 entity_ruler=ner.add_pipe("entity_ruler")
@@ -124,12 +142,17 @@ def main():
                 if st.session_state.resume_process:
                     st.session_state.jd_process = True
                     jd = st.session_state.raw_text1
-                    job_emails=st.session_state.jemails
-                    job_links=st.session_state.jlinks
-                    cleaned_jd = resume_processor.remove_links_and_emails(jd, job_links, job_emails)
+                    jemails = resume_processor.extract_emails(jd)
+                    st.session_state.jemails=jemails
+                    jlinks = resume_processor.extract_links(jd)
+                    st.session_state.jlinks=jlinks
+                    cleaned_jd = resume_processor.remove_links_and_emails(jd, jlinks, jemails)
                     cleaned_jd = resume_processor.preprocess_resume(cleaned_jd)
-                    cleaned_jd = resume_processor.remove_links_and_emails(jd, job_links, job_emails)
-                    cleaned_jd = resume_processor.preprocess_resume(cleaned_jd)
+                    cleaned_resume = st.session_state.cleaned_resume
+                    st.subheader('Common Words between Resume and Job Description')
+                    common = Base_ATS.find_common_words_dict(cleaned_resume,cleaned_jd)  
+                    st.write(common)
+                    st.write('')
                     st.subheader('Skills in Job Description')
                     jd_skills = Job_Des.jd_skill(cleaned_jd)
                     st.session_state.jd_skills=jd_skills

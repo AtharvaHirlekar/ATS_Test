@@ -13,7 +13,6 @@ import spacy
 import pandas as pd
 import re
 from nltk.corpus import stopwords
-import json
 from spacy import displacy
 nltk.download('wordnet')
 nltk.download('punkt')

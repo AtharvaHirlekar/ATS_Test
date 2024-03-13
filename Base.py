@@ -23,28 +23,12 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 #Preprocessing
-
 from pathlib import Path
 from urllib.parse import urlparse
 
 class BaseATS:
     def color_text_red(self,text):
       return colored(text, 'red')
-    
-    def process_uploaded_file_and_display(file_uploader, label, folder_path):
-        if file_uploader is not None:
-            file_details = {'filename': file_uploader.name, 'filetype': file_uploader.type, 'filesize': file_uploader.size}
-            st.write(file_details)
-            if file_uploader.type == 'text/plain':
-                raw_text = str(file_uploader.read(), 'utf-8')
-            elif file_uploader.type == 'application/pdf':
-                save_path = Base_ATS.save_uploaded_file(file_uploader, destination_path=folder_path)
-                raw_text = Base_ATS.read_pdf(file_uploader)
-                Base_ATS.delete_file(save_path)
-            else:
-                raw_text = docx2txt.process(file_uploader)
-            st.session_state[label] = raw_text
-            st.text(raw_text)
 
     def highlight_common_words(self,text, common_words):
       words = text.split()
